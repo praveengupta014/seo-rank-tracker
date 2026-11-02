@@ -24,10 +24,12 @@ export async function scrapUrl(url){
       return {success: false, error: navError.message}
     }
     const loadTime = Date.now() - startTime;
+    // Let client-side redirects / reloads settle before reading the DOM
+    await page.waitForLoadState("networkidle", {timeout: 10000}).catch(() => {});
     await page.waitForTimeout(2000);
 
     // Extract all SEO-relevant data from the rendered page
-    const scrapedData = await page.evaluate(()=>{
+    const extractSeoData = ()=>{
       const getMeta = (name) => {
         const el = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`);
         return el ? el.getAttribute("content") || "" : "";
@@ -84,7 +86,22 @@ export async function scrapUrl(url){
         pageSize,
         bodyText: bodyText.substring(0, 3000),
       }
-    })
+    }
+
+    // Retry if the page navigated mid-evaluate ("Execution context was destroyed")
+    let scrapedData;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        scrapedData = await page.evaluate(extractSeoData);
+        break;
+      } catch (evalError) {
+        const navigated = /Execution context was destroyed|navigation/i.test(evalError.message);
+        if (!navigated || attempt === 3) throw evalError;
+        console.warn(`[SCRAPER] Page navigated during evaluate, retrying (${attempt})...`);
+        await page.waitForLoadState("domcontentloaded", {timeout: 15000}).catch(() => {});
+        await page.waitForTimeout(1500);
+      }
+    }
 
     const statusCode = response?.status() || 0;
     await page.close();
@@ -103,6 +120,7 @@ export async function scrapUrl(url){
         console.error("[SCRAPER] browser close failed:", error.message);
       }
     }
+    return { success: false, error: error.message };
   }
 }
 export default scrapUrl;

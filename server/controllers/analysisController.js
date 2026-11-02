@@ -60,9 +60,8 @@ export const analyzeUrl = async (req, res) => {
         analysis.status = "failed";
         await analysis.save()
     } catch (saveError) {
-        
-    } console.error('Failed to save failed status:',saveError.message);
-    
+        console.error('Failed to save failed status:', saveError.message);
+    }
    }
 
 

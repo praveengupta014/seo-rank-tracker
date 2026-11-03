@@ -29,7 +29,13 @@ export async function rankTracker(keyword, targetDomain){
     let found  = null,
     allResults = [];
 
-    const cleanTarget = targetDomain.replace("www."," ").toLowerCase();
+    // trim() also cleans domains saved by the old buggy replace("www."," ")
+    const cleanTarget = targetDomain.trim().toLowerCase().replace(/^www\./,"");
+    // Exact domain or its subdomain (blog.example.com matches example.com, notexample.com does not)
+    const isTarget = (domain) => {
+      const d = domain.toLowerCase();
+      return d === cleanTarget || d.endsWith(`.${cleanTarget}`);
+    };
 
     //3. search loop: iterate through up to 5 pages of google results
     for(let gpage = 0; gpage < 5; gpage++){
@@ -71,7 +77,7 @@ export async function rankTracker(keyword, targetDomain){
 
             }
           }
-          return{url:a.href,domain:new URL(a.href).hostname.replace("www.",""),
+          return{url:a.href,domain:new URL(a.href).hostname.replace(/^www\./,""),
           title:h3.innerText.trim(),snippet:s}
 
         }).filter(Boolean)
@@ -88,8 +94,7 @@ export async function rankTracker(keyword, targetDomain){
     for(const r of pageResults){
         r.position = allResults.length + 1;
         allResults.push(r)
-        if(!found && (r.domain.toLowerCase().includes(cleanTarget) || cleanTarget.includes
-    (r.domain.toLowerCase()))){
+        if(!found && isTarget(r.domain)){
         found = {...r,page: gpage + 1}
     }
     }
@@ -100,8 +105,7 @@ export async function rankTracker(keyword, targetDomain){
   
     //6. Finalization: Close browser and extract competitors
     await browser.close();
-    const competitors = allResults.filter((r)=>!r.domain.toLowerCase().includes(cleanTarget)&&
-    !cleanTarget.includes(r.domain.toLowerCase())).slice(0,10);
+    const competitors = allResults.filter((r)=>!isTarget(r.domain)).slice(0,10);
 
     return{
         success:true,

@@ -13,7 +13,7 @@ if(!keyword || ! url) return res.status(400).json({success: false, message:"Keyw
 let domain;
 try{
 const urlObj = new URL(url.startsWith("http")? url : `http://${url}`);
-domain = urlObj.hostname.replace("www."," ")
+domain = urlObj.hostname.toLowerCase().replace(/^www\./,"")
         }catch(error){
 return res.status(400).json({success: false, message:"Invalid URL format"});
 

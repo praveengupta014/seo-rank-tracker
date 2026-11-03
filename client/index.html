@@ -4,14 +4,43 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RankPilot — Free AI SEO Analyzer & Website Audit Tool</title>
     <meta name="description" content="RankPilot — AI-powered SEO analyzer. Get instant SEO audits, performance scores, keyword analysis, and actionable recommendations for any website." />
-    <meta name="keywords" content="SEO analyzer, SEO audit, website analysis, keyword research, site performance, SEO checker" />
-    <meta property="og:title" content="RankPilot — AI SEO Analyzer" />
-    <meta property="og:description" content="Get instant AI-powered SEO audits for any website. Analyze performance, keywords, accessibility, and more." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <title>Rank Pilot — AI SEO Analyzer</title>
+    <meta property="og:site_name" content="RankPilot" />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:title" content="RankPilot — Free AI SEO Analyzer & Website Audit Tool" />
+    <meta property="og:description" content="Get instant AI-powered SEO audits for any website. Analyze performance, keywords, accessibility, and more." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="RankPilot — Free AI SEO Analyzer & Website Audit Tool" />
+    <meta name="twitter:description" content="Get instant AI-powered SEO audits for any website. Analyze performance, keywords, accessibility, and more." />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "RankPilot",
+        "url": "%VITE_SITE_URL%/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "AI-powered SEO analyzer that delivers instant SEO audits, performance scores, keyword analysis, and rank tracking for any website.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
   </head>
   <body>
+    <noscript>RankPilot is a free AI SEO analyzer and website audit tool. Please enable JavaScript to run SEO audits and track keyword rankings.</noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

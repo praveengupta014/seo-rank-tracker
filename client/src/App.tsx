@@ -12,6 +12,7 @@ import RankDetail from "./pages/RankDetail";
 import { Toaster } from "react-hot-toast";
 import { useApp } from "./context/AppContext";
 import Loading from "./components/Loading";
+import PageMeta from "./components/PageMeta";
 
 
 export default function App() {
@@ -20,10 +21,11 @@ export default function App() {
 
     const hideNavbar = ["/login", "/register"].includes(location.pathname);
 
-    if(loading) return < Loading />
+    if(loading) return <><PageMeta />< Loading /></>
 
     return (
         <>
+            <PageMeta />
             <Toaster />
             {!hideNavbar && <Navbar />}
             <Routes>

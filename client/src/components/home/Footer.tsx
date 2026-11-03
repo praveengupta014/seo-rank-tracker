@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChartNoAxesColumnIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import { homefooterLinks } from "../../assets/assets";
 import { SiX, SiInstagram, SiFacebook, SiTwitch } from "@icons-pack/react-simple-icons";
 
@@ -7,7 +8,7 @@ export default function Footer() {
     return (
         <footer className="border-t border-border py-12 bg-card text-foreground">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-12 mb-12">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-12 mb-12">
                     <div className="col-span-2">
                         <div className="flex items-center gap-2 mb-4">
                             <ChartNoAxesColumnIcon className="text-primary" />
@@ -35,10 +36,10 @@ export default function Footer() {
                             <h3 className="mb-4">{section.title}</h3>
                             <ul className="space-y-1">
                                 {section.links.map((link: any) => (
-                                    <li key={link}>
-                                        <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                            {link}
-                                        </a>
+                                    <li key={link.label}>
+                                        <Link to={link.to} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                                            {link.label}
+                                        </Link>
                                     </li>
                                 ))}
                             </ul>

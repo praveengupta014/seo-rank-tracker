@@ -15,11 +15,25 @@
     <meta property="og:url" content="%VITE_SITE_URL%/" />
     <meta property="og:title" content="RankPilot — Free AI SEO Analyzer & Website Audit Tool" />
     <meta property="og:description" content="Get instant AI-powered SEO audits for any website. Analyze performance, keywords, accessibility, and more." />
+    <meta property="og:image" content="%VITE_SITE_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="RankPilot — Analyze and boost your SEO rankings" />
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="RankPilot — Free AI SEO Analyzer & Website Audit Tool" />
     <meta name="twitter:description" content="Get instant AI-powered SEO audits for any website. Analyze performance, keywords, accessibility, and more." />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/og-image.png" />
+
+    <!-- Apply saved theme before first paint so prerendered pages don't flash -->
+    <script>
+      try {
+        var t = localStorage.getItem("rankpilot-theme") || "system";
+        if (t === "system") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.classList.add(t);
+      } catch (e) {}
+    </script>
 
     <!-- Structured data -->
     <script type="application/ld+json">

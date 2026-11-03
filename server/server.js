@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import authRouter from './route/authRoute.js';
 import rankRouter from './route/rankRoute.js';
 import analysisRouter from './route/analysisRoutes.js';
+import toolsRouter from './route/toolsRoute.js';
 import { startRankTrackingCron } from './cron/rankTrackingCron.js';
 
 
@@ -14,6 +15,7 @@ connectDB()
 
 const app = express()
 
+app.set('trust proxy', true)
 app.use(cors())
 app.use(express.json())
 
@@ -21,6 +23,7 @@ app.get('/',(req,res) => res.send('server is running'))
 app.use('/api/auth',authRouter)
 app.use('/api/rank',rankRouter)
 app.use('/api/analysis',analysisRouter)
+app.use('/api/tools',toolsRouter)
  
 // start crons jobs 
 startRankTrackingCron()

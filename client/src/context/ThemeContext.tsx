@@ -19,7 +19,7 @@ const initialState: ThemeProviderState = { theme: "system", setTheme: () => null
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({ children, defaultTheme = "system", storageKey = "rankpilot-theme", ...props }: ThemeProviderProps) {
-    const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme);
+    const [theme, setTheme] = useState<Theme>(() => (typeof window === "undefined" ? null : (localStorage.getItem(storageKey) as Theme)) || defaultTheme);
 
     useEffect(() => {
         const root = window.document.documentElement;

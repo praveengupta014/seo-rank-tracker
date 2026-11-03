@@ -26,6 +26,11 @@ export default function Navbar() {
         { path: "/history", label: "History", icon: <History size={18} /> },
     ];
 
+    const publicLinks = [
+        { path: "/tools", label: "Free Tools" },
+        { path: "/blog", label: "Blog" },
+    ];
+
     return (
         <nav className="fixed top-0 w-full bg-background/70 backdrop-blur-lg z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -37,6 +42,15 @@ export default function Navbar() {
                     </Link>
 
                     {/* Desktop nav */}
+                    {!user && (
+                        <div className="hidden md:flex items-center gap-1">
+                            {publicLinks.map((link) => (
+                                <Link key={link.path} to={link.path} className={`px-4 py-2 rounded-lg text-sm transition-all ${location.pathname.startsWith(link.path) ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}>
+                                    {link.label}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                     {user && (
                         <div className="hidden md:flex items-center gap-1">
                             {navLinks.map((link) => (
@@ -133,6 +147,11 @@ export default function Navbar() {
                             </>
                         ) : (
                             <div className="py-2 space-y-2">
+                                {publicLinks.map((link) => (
+                                    <Link key={link.path} to={link.path} onClick={() => setMobileOpen(false)} className="block px-3 py-3 text-sm font-medium text-foreground text-center rounded-lg hover:bg-muted">
+                                        {link.label}
+                                    </Link>
+                                ))}
                                 <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-3 text-sm font-medium text-foreground text-center rounded-lg hover:bg-muted">
                                     Log In
                                 </Link>

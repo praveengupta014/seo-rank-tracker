@@ -58,19 +58,27 @@ export const homeHowItWorksData = [
 export const homefooterLinks = [
     {
         title: "Product",
-        links: ["Features", "Pricing", "API", "Browser Extension"],
+        links: [
+            { label: "SEO Audit", to: "/register" },
+            { label: "Rank Tracker", to: "/register" },
+            { label: "Log In", to: "/login" },
+        ],
+    },
+    {
+        title: "Free Tools",
+        links: [
+            { label: "Meta Tag Checker", to: "/tools/meta-tag-checker" },
+            { label: "SERP Preview", to: "/tools/serp-preview" },
+            { label: "All Tools", to: "/tools" },
+        ],
     },
     {
         title: "Resources",
-        links: ["Documentation", "Blog", "SEO Guide", "Support"],
-    },
-    {
-        title: "Company",
-        links: ["About Us", "Careers", "Contact", "Press"],
-    },
-    {
-        title: "Legal",
-        links: ["Privacy Policy", "Terms of Service", "Cookie Policy"],
+        links: [
+            { label: "Blog", to: "/blog" },
+            { label: "Improve SEO Score", to: "/blog/how-to-improve-seo-score" },
+            { label: "Track Rankings", to: "/blog/how-to-track-keyword-rankings" },
+        ],
     },
 ];
 

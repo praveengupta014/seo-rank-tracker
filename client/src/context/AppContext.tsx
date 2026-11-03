@@ -30,8 +30,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 export function AppProvider({children}:{children: ReactNode}){
 
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(() => typeof window === "undefined" ? null : localStorage.getItem("token"));
+  // Only block rendering while verifying an existing token, so public pages render immediately
+  const [loading, setLoading] = useState(() => !!token);
 
 
   // axios instance with auth header

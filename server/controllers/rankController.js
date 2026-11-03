@@ -1,5 +1,6 @@
 import KeywordTracking from "../model/keywordTracking.js";
-import { keywordTracking } from "../services/keywordTrackingService.js";
+import { waitUntil } from "@vercel/functions";
+import { keywordTracking, failStaleChecks } from "../services/keywordTrackingService.js";
 
 
 // Add keyword to track
@@ -34,7 +35,8 @@ status:"checking"
         })
 
 res.status(201).json({success: true, message: "keyword tracking started", tracking });
-keywordTracking(tracking)
+// waitUntil keeps the serverless function alive after the response until the check finishes
+waitUntil(keywordTracking(tracking))
 
 
 
@@ -53,6 +55,7 @@ export const getKeywords = async (req, res) => {
 try {
 const keywords = await KeywordTracking.find({userId:req.userId}).sort({createdAt: -1}).
 select("-rankHistory")
+await failStaleChecks(keywords)
 res. json({success: true, keywords });
     } catch (error) {
 console.error ("Get keywords error:", error. message);
@@ -66,6 +69,7 @@ export const getKeyword = async (req, res) => {
     try {
         const keywords = await KeywordTracking.findOne({_id:req.params.id,userId: req.userId});
         if(!keywords) return res.status(404).json({success: false, message: "Keyword tracking not found"});
+        await failStaleChecks([keywords])
         res.json({success: true, tracking: keywords });
     } catch (error) {
         console.error("Get keywords error:", error.message);
@@ -77,9 +81,12 @@ export const refreshKeyword = async (req, res) => {
 try {
 const keywords = await KeywordTracking.findOne({_id:req.params.id,userId: req.userId});
 if(!keywords) return res. status(404). json({success: false, message: "Keyword tracking not found"});
+if(keywords.status === "checking") return res.json({success: true, message:"Rank check already running" });
 keywords.status = "checking";
+keywords.errorMessage = null;
 await keywords.save();
-res. json({success: true, message:"Rank check satrted" });
+res. json({success: true, message:"Rank check started" });
+waitUntil(keywordTracking(keywords))
     } catch (error) {
 console.error ("Get keywords error:", error. message);
 res. status (500). json({ success: false, message: "Server error" }) ;

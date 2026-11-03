@@ -16,6 +16,7 @@ interface KeywordItem {
     active: boolean;
     lastChecked: string | null;
     status: string;
+    errorMessage?: string | null;
     competitors: { position: number; url: string; domain: string; title: string; snippet: string }[];
 }
 
@@ -40,6 +41,8 @@ export default function RankTracker() {
     const res = await api.get('/api/rank/list');
     if(res.data.success) {
         setKeywords(res.data.keywords)
+        // Resume polling for checks that were still running when the page loaded
+        res.data.keywords.filter((k: KeywordItem) => k.status === "checking").forEach((k: KeywordItem) => pollKeyword(k._id))
     }
 }
 catch (err) {
@@ -49,6 +52,24 @@ finally {
     setLoading(false)
 }
         
+    };
+
+    // Poll a keyword every 5s until its check finishes. The server marks checks stuck
+    // longer than ~6 minutes as failed, so this always ends; the cap is a safety net.
+    const pollKeyword = async (id: string) => {
+        for (let attempt = 0; attempt < 90; attempt++) {
+            await new Promise((r) => setTimeout(r, 5000));
+            try {
+                const check = await api.get(`/api/rank/${id}`);
+                if (check.data.tracking.status !== "checking") {
+                    setKeywords((prev) => prev.map((k) => (k._id === id ? { ...k, ...check.data.tracking } : k)));
+                    return;
+                }
+            } catch (error) {
+                console.error(error);
+                return;
+            }
+        }
     };
 
     const handleAdd = async (e: React.SubmitEvent) => {
@@ -68,20 +89,7 @@ finally {
                 setNewUrl("")
                 setShowAddModal(false)
 
-                // Poll for completion 
-                const id = res.data.tracking._id;
-const pollInterval = setInterval(async ()=>{
-    try {
-        const check = await api.get(`/api/rank/${id}`);
-        if(check.data.tracking.status !== "checking"){
-            clearInterval(pollInterval)
-            setKeywords((prev)=> prev.map((k)=> (k._id === id ? check.data.tracking : k)))
-        }
-    } catch (error: any) {
-        console.error(error);
-        clearInterval(pollInterval)
-    }
-}, 3000)
+                pollKeyword(res.data.tracking._id)
             }
         } catch (err:any) {
             setAddError(err.response?.data?.message || "Failed to add keyword")
@@ -96,20 +104,8 @@ const pollInterval = setInterval(async ()=>{
         // Update status to checking
        setKeywords((prev)=> prev.map((k)=> (k._id === id ? {...k, status: "checking"} : k)))
 
-       // pole for completions
-       const pollInterval = setInterval(async ()=>{
-    try {
-        const check = await api.get(`/api/rank/${id}`);
-        if(check.data.tracking.status !== "checking"){
-            clearInterval(pollInterval)
-            setKeywords((prev)=> prev.map((k)=> (k._id === id ? check.data.tracking : k)))
-            setRefreshing(null)
-        }
-    } catch (error: any) {
-        console.error(error);
-        clearInterval(pollInterval)
-    }
-}, 3000)
+       await pollKeyword(id)
+       setRefreshing(null)
        }
         catch (err) {
         console.error("Refresh failed:",err);
@@ -297,6 +293,12 @@ const pollInterval = setInterval(async ()=>{
                                                 <span className="text-sm text-muted-foreground truncate">{kw.domain}</span>
                                                 {kw.currentPage && <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Page {kw.currentPage}</span>}
                                             </div>
+                                            {kw.status === "failed" && (
+                                                <div className="flex items-center gap-1 mt-1 text-xs text-danger">
+                                                    <AlertCircle size={12} className="shrink-0" />
+                                                    {kw.errorMessage || "Rank check failed."} Click refresh to retry.
+                                                </div>
+                                            )}
                                             {kw.lastChecked && (
                                                 <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                                                     <Clock size={10} />

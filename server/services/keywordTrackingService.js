@@ -7,9 +7,13 @@ export async function keywordTracking(tracking){
         for (let attempt = 1; attempt <= 2; attempt++){
             result = await rankTracker(tracking.keyword,tracking.domain)
             if (result.success && result.data.totalResultsScanned > 0) break;
+            if (result.retryable === false) break;
             if(attempt < 2) await new Promise((r)=> setTimeout(r,result.success ? 3000:5000))
         }
-        if(result.success){
+        if(result.success && result.data.totalResultsScanned === 0){
+            tracking.status = "failed";
+            tracking.errorMessage = "No Google results could be read. Please try again later.";
+        }else if(result.success){
             const prev = tracking.currentPosition;
             const today = new Date()
             today.setHours(0,0,0,0);
@@ -18,6 +22,7 @@ export async function keywordTracking(tracking){
             tracking.competitors = result.data.competitors
             tracking.lastChecked = new Date();
             tracking.status = "completed";
+            tracking.errorMessage = null;
             
             //update stats
             tracking.positionChange = prev && result.data.position ? prev - result.data.position:0;
@@ -38,6 +43,7 @@ export async function keywordTracking(tracking){
             else tracking.rankHistory.push(historyEntry);
         }else{
             tracking.status = "failed";
+            tracking.errorMessage = result.error || "Rank check failed. Please try again.";
         }
         await tracking.save();
         return result;
@@ -45,9 +51,23 @@ export async function keywordTracking(tracking){
     } catch (error) {
         console.error("Rank update error:",error.message);
         tracking.status = "failed";
+        tracking.errorMessage = "Rank check failed. Please try again.";
         await tracking.save().catch(() => {});
         return {success: false, error: error.message}
         
     }
 }
 export default keywordTracking;
+// A check that stays "checking" this long was killed mid-run (e.g. serverless timeout)
+const STALE_CHECK_MS = 6 * 60 * 1000;
+
+export async function failStaleChecks(trackings){
+    const now = Date.now();
+    for (const tracking of trackings){
+        if (tracking.status === "checking" && now - new Date(tracking.updatedAt).getTime() > STALE_CHECK_MS){
+            tracking.status = "failed";
+            tracking.errorMessage = "Rank check timed out. Please try again.";
+            await tracking.save().catch(() => {});
+        }
+    }
+}

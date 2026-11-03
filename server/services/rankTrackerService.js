@@ -1,134 +1,78 @@
-import { chromium } from "playwright-core";
-import Browserbase from "@browserbasehq/sdk";
+// Finds where a domain ranks on Google for a keyword using the Serper.dev SERP API.
+// (Scraping Google directly through a headless browser gets blocked by CAPTCHAs.)
 
-const bb = new Browserbase({
-  apiKey: process.env.BROWSERBASE_API_KEY,
-});
+const SERPER_URL = "https://google.serper.dev/search";
+const MAX_PAGES = 5; // top 50 results, 1 Serper credit per page
 
+const searchPage = async (keyword, page) => {
+  const res = await fetch(SERPER_URL, {
+    method: "POST",
+    headers: { "X-API-KEY": process.env.SERPER_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ q: keyword, gl: "us", hl: "en", num: 10, page }),
+    signal: AbortSignal.timeout(20000),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = new Error(data.message || `Serper request failed (${res.status})`);
+    // 400 bad request, 401/403 bad key, 429 out of credits / rate limited: retrying won't help
+    error.retryable = ![400, 401, 403, 429].includes(res.status);
+    throw error;
+  }
+  return data.organic || [];
+};
 
-// Search google for keyword and extract racking for target domain.
 export async function rankTracker(keyword, targetDomain){
-  let browser;
-  try{
-    // 1. intialize Browserbase session @ connect playwright
-    const session = await bb.sessions.create({browserSettings:{blockAds:true}});
-    browser = await chromium.connectOverCDP(session.connectUrl)
-    const page = await browser.contexts()[0].pages()[0];
-    page.setDefaultNavigationTimeout(45000);
-
-    //2.Initial google visit & Consent Handling
-    await page.goto("https://google.com",{waitUntil:"networkidle"});
-    try {
-      const btn = await page.$(`button[id="L2AGLb"],form[action*="consent"] button`)
-      if(btn){
-        await btn.click();
-        await page.waitForTimeout(1500);
-      }
-    } catch  {}
-
-    let found  = null,
-    allResults = [];
-
-    // trim() also cleans domains saved by the old buggy replace("www."," ")
-    const cleanTarget = targetDomain.trim().toLowerCase().replace(/^www\./,"");
-    // Exact domain or its subdomain (blog.example.com matches example.com, notexample.com does not)
-    const isTarget = (domain) => {
-      const d = domain.toLowerCase();
-      return d === cleanTarget || d.endsWith(`.${cleanTarget}`);
-    };
-
-    //3. search loop: iterate through up to 5 pages of google results
-    for(let gpage = 0; gpage < 5; gpage++){
-      await page.goto(`https://google.com/search?q=${encodeURIComponent(keyword)}&start=${gpage * 10}&num=10&hl=en&gl=us`,{waitUntil:"networkidle"})
-
-    // 4. Page Extraction: Retry up to 3 times if results are missing
-    let pageResults = [];
-    for ( let retry = 0; retry < 3; retry++){
-      try {
-        await page.waitForSelector('h3', {timeout: 8000});
-        await page.waitForTimeout(1500);
-        pageResults = await page.evaluate(()=> Array.from(document.querySelectorAll
-        ('h3')).map((h3)=>{
-          let a  = h3.closest('a');
-          if(!a){
-            let p = h3.parentElement;
-            for(let j = 0; j < 5 && p; j++, p = p.parentElement){
-              if(p.tagName === "A"){
-                a = p;
-                break;
-              }
-              const sub = p.querySelector("a[href]");
-              if(sub && sub.contains(h3)) {
-                a = sub;
-                break;  
-              }
-            }
-          }
-          if(!a || !a.href.startsWith("http") || a.href.includes('google.')) return 
-          null;
-
-          let s = "",
-          c = a.parentElement;
-          for(let j = 0; j < 6 && c; j++, c = c.parentElement){
-            const txt = c.innerText || "";
-            if(txt.length > h3.innerText.length+50){
-              s = (txt.split("\n").find((l)=>l.length > 30 && !l.includes(h3.innerText.substring(0,20)))|| "").trim().substring(0,300);
-              if(s) break;
-
-            }
-          }
-          return{url:a.href,domain:new URL(a.href).hostname.replace(/^www\./,""),
-          title:h3.innerText.trim(),snippet:s}
-
-        }).filter(Boolean)
-        );
-        if(pageResults.length > 0) break;
-        await page.reload({waitUntil: "networkidle"})
-      } catch (err) {
-        if (retry === 2) break;
-        await page.reload({waitUntil: "networkidle"})
-      }
-    }
-    if(!pageResults.length)break;
-    // 5. Result Synthesis: Update global results and check for target match
-    for(const r of pageResults){
-        r.position = allResults.length + 1;
-        allResults.push(r)
-        if(!found && isTarget(r.domain)){
-        found = {...r,page: gpage + 1}
-    }
-    }
-    if(found)break;
-    await page.waitForTimeout(2000 + Math.random() * 2000);
+  if (!process.env.SERPER_API_KEY) {
+    return { success: false, retryable: false, error: "Rank tracking is not configured (SERPER_API_KEY missing)." };
   }
 
-  
-    //6. Finalization: Close browser and extract competitors
-    await browser.close();
-    const competitors = allResults.filter((r)=>!isTarget(r.domain)).slice(0,10);
+  // trim() also cleans domains saved by the old buggy replace("www."," ")
+  const cleanTarget = targetDomain.trim().toLowerCase().replace(/^www\./,"");
+  // Exact domain or its subdomain (blog.example.com matches example.com, notexample.com does not)
+  const isTarget = (domain) => domain === cleanTarget || domain.endsWith(`.${cleanTarget}`);
 
-    return{
-        success:true,
-        data :{
-            keyword,
-            targetDomain,
-            position: found?.position || null,
-            page:found?.page || null,
-            title: found?.title || "",
-            snippet:found?.snippet || "",
-            competitors,
-            totalResultsScanned: allResults.length
+  try {
+    let found = null;
+    const allResults = [];
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const organic = await searchPage(keyword, page);
+      if (!organic.length) break;
+
+      for (const r of organic) {
+        let domain;
+        try {
+          domain = new URL(r.link).hostname.toLowerCase().replace(/^www\./, "");
+        } catch {
+          continue;
         }
-
+        const result = { url: r.link, domain, title: r.title || "", snippet: (r.snippet || "").substring(0, 300), position: allResults.length + 1 };
+        allResults.push(result);
+        if (!found && isTarget(domain)) found = { ...result, page };
+      }
+      if (found) break;
     }
 
+    const competitors = allResults.filter((r) => !isTarget(r.domain)).slice(0, 10);
 
-
-  }catch(error){
-    console.error("Rank check error:",error.message);
-    if(browser) await browser.close().catch(()=>{})
-   return{success:false,error:error.message}
-
+    return {
+      success: true,
+      data: {
+        keyword,
+        targetDomain,
+        position: found?.position || null,
+        page: found?.page || null,
+        title: found?.title || "",
+        snippet: found?.snippet || "",
+        competitors,
+        totalResultsScanned: allResults.length,
+      },
+    };
+  } catch (error) {
+    console.error("Rank check error:", error.message);
+    const message = error.name === "TimeoutError" ? "Search request timed out. Please try again." : error.message;
+    return { success: false, retryable: error.retryable !== false, error: message };
   }
 }
+
 export default rankTracker;

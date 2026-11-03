@@ -32,6 +32,7 @@ const keywordTrackingschema = new mongoose.Schema({
     active:{type: Boolean, default:true},
     lastChecked:{type:Date,default:null},
     status:{type:String, enum:["pending", "checking", "completed" ,"failed"],default:"pending"},
+    errorMessage:{type:String, default:null},
     
 },{timestamps:true})
 

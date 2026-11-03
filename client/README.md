@@ -1,5 +1,7 @@
 # SEO Rank Tracker
 
+> Full project documentation, including workflows, environment variables, the SEO build pipeline and deployment, is in the [root README](../README.md).
+
 **SEO Rank Tracker** is an AI-powered SEO analyzer built with React, Vite, and Tailwind CSS. It provides instant SEO audits, performance scores, keyword analysis, and actionable recommendations for any website.
 
 ## Features
@@ -28,11 +30,11 @@
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/GreatStackDev/seo-rank-tracker.git
+    git clone https://github.com/praveengupta014/seo-rank-tracker.git
     ```
-2. Navigate to the project directory:
+2. Navigate to the client directory:
     ```bash
-    cd seo-rank-tracker
+    cd seo-rank-tracker/client
     ```
 3. Install dependencies:
     ```bash

@@ -50,7 +50,7 @@ const Meter = ({ label, chars, px, max, ideal }: { label: string; chars: number;
 export default function SerpPreview() {
     const [title, setTitle] = useState("Free Meta Tag Checker — Instant On-Page SEO Score | RankPilot");
     const [description, setDescription] = useState("Check any URL's title, meta description, canonical, Open Graph and H1 tags in seconds. Get a free on-page SEO score and fixes — no signup needed.");
-    const [url, setUrl] = useState("seo-rank-tracker-client-iota.vercel.app › tools");
+    const [url, setUrl] = useState("www.seoranktracker.dev › tools");
     const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
 
     const limits = LIMITS[device];

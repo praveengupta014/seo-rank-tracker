@@ -2,7 +2,7 @@
 
 AI-powered SEO analyzer and Google keyword rank tracker.
 
-- **Live site:** https://seo-rank-tracker-client-iota.vercel.app
+- **Live site:** https://www.seoranktracker.dev
 - **API:** https://seo-rank-tracker-server-alpha.vercel.app
 
 ```
@@ -142,7 +142,7 @@ Both apps deploy automatically when you push to `main`.
 
 | Vercel project | Root | Notes |
 |---|---|---|
-| Client | `client/` | Output folder is `dist`. Real files such as robots.txt and prerendered pages are served first; every other URL is rewritten to `/spa.html`. |
+| Client | `client/` | Output folder is `dist`. Domain: `www.seoranktracker.dev` (DNS at name.com; the apex redirects to `www`). The old `vercel.app` URL 308-redirects to it, except the Search Console verification file. Real files such as robots.txt and prerendered pages are served first; every other URL is rewritten to `/spa.html`. |
 | Server | `server/` | Uses `@vercel/node` with `maxDuration: 300`. |
 
 After a deploy, check:

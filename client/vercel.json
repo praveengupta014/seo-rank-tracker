@@ -1,8 +1,21 @@
 {
-    "rewrites": [
-      {
-        "source": "/(.*)",
-        "destination": "/spa.html"
-      }
-    ]
-  }
+  "redirects": [
+    {
+      "source": "/:path((?!google71e9d4b0707b006f\\.html).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "seo-rank-tracker-client-iota.vercel.app"
+        }
+      ],
+      "destination": "https://www.seoranktracker.dev/:path",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/spa.html"
+    }
+  ]
+}

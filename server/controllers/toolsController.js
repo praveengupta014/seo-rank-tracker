@@ -45,7 +45,7 @@ const fetchHtml = async (startUrl) => {
         const res = await fetch(url, {
             redirect: "manual",
             signal: AbortSignal.timeout(TIMEOUT_MS),
-            headers: { "User-Agent": "Mozilla/5.0 (compatible; RankPilotBot/1.0; +https://seo-rank-tracker-client-iota.vercel.app)", Accept: "text/html" },
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; RankPilotBot/1.0; +https://www.seoranktracker.dev)", Accept: "text/html" },
         });
 
         if (res.status >= 300 && res.status < 400 && res.headers.get("location")) {
